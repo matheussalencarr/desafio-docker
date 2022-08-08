@@ -1,17 +1,15 @@
-FROM  golang:alpine3.16 as builder
+FROM golang:1.7.4-alpine3.5 as builder
+
+WORKDIR /app 
+
+COPY *.go /app/
+
+RUN CGO_ENABLED=0 GOOS=linux go build main.go
+
+FROM scratch
 
 WORKDIR /app
 
-COPY main.go ./
-COPY go.* ./
-RUN go mod download
-COPY *.go ./
+COPY --from=builder /app .
 
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o hello_go .
-
-FROM alpine:latest
-RUN apk --no-cache add ca-certificates
-WORKDIR /root/
-COPY --from=builder /app/hello_go ./
-
-ENTRYPOINT [ "hello_go" ]
+ENTRYPOINT ["./main"]
